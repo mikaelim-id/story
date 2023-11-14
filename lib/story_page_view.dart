@@ -298,6 +298,8 @@ class _StoryPageBuilder extends StatefulWidget {
         indicatorVisitedColor: indicatorVisitedColor,
         indicatorUnvisitedColor: indicatorUnvisitedColor,
         indicatorHeight: indicatorHeight,
+        onPause: onPause,
+        onResume: onResume,
       ),
     );
   }
