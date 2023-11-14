@@ -38,6 +38,8 @@ class StoryPageView extends StatefulWidget {
     this.indicatorUnvisitedColor = Colors.grey,
     this.indicatorHeight = 2,
     this.showShadow = false,
+    this.onPause,
+    this.onResume,
   }) : super(key: key);
 
   ///  visited color of [_Indicators]
@@ -88,6 +90,10 @@ class StoryPageView extends StatefulWidget {
 
   /// Whether to show shadow near indicator
   final bool showShadow;
+
+  final Function()? onPause;
+
+  final Function()? onResume;
 
   /// A stream with [IndicatorAnimationCommand] to force pause or continue inticator animation
   /// Useful when you need to show any popup over the story
@@ -163,6 +169,16 @@ class _StoryPageViewState extends State<StoryPageView> {
                       widget.indicatorAnimationController,
                   indicatorUnvisitedColor: widget.indicatorUnvisitedColor,
                   indicatorVisitedColor: widget.indicatorVisitedColor,
+                  onPause: () {
+                    if (widget.onPause != null) {
+                      widget.onPause!();
+                    }
+                  },
+                  onResume: () {
+                    if (widget.onResume != null) {
+                      widget.onResume!();
+                    }
+                  },
                 ),
                 if (isPaging && !isLeaving)
                   Positioned.fill(
@@ -199,6 +215,8 @@ class _StoryPageBuilder extends StatefulWidget {
     required this.indicatorVisitedColor,
     required this.indicatorHeight,
     required this.showShadow,
+    required this.onPause,
+    required this.onResume,
   }) : super(key: key);
   final int storyLength;
   final int initialStoryIndex;
@@ -214,6 +232,8 @@ class _StoryPageBuilder extends StatefulWidget {
   final Color indicatorUnvisitedColor;
   final double indicatorHeight;
   final bool showShadow;
+  final Function() onPause;
+  final Function() onResume;
 
   static Widget wrapped({
     required int pageIndex,
@@ -234,6 +254,8 @@ class _StoryPageBuilder extends StatefulWidget {
     required Color indicatorUnvisitedColor,
     required double indicatorHeight,
     required bool showShadow,
+    required Function() onPause,
+    required Function() onResume,
   }) {
     return MultiProvider(
       providers: [
@@ -399,6 +421,8 @@ class _StoryPageBuilderState extends State<_StoryPageBuilder>
         ),
         _Gestures(
           animationController: animationController,
+          onPause: widget.onPause,
+          onResume: widget.onResume,
         ),
         Positioned.fill(
           child: widget.gestureItemBuilder?.call(
@@ -420,9 +444,13 @@ class _Gestures extends StatelessWidget {
   const _Gestures({
     Key? key,
     required this.animationController,
+    required this.onPause,
+    required this.onResume,
   }) : super(key: key);
 
   final AnimationController? animationController;
+  final Function() onPause;
+  final Function() onResume;
 
   @override
   Widget build(BuildContext context) {
@@ -433,24 +461,29 @@ class _Gestures extends StatelessWidget {
             color: Colors.transparent,
             child: GestureDetector(
               onTap: () {
+                onResume();
                 animationController!.forward(from: 0);
                 context.read<_StoryStackController>().decrement();
               },
               onTapDown: (_) {
+                onPause();
                 animationController!.stop();
               },
               onTapUp: (_) {
                 if (storyImageLoadingController.value !=
                     StoryImageLoadingState.loading) {
+                  onResume();
                   animationController!.forward();
                 }
               },
               onLongPress: () {
+                onPause();
                 animationController!.stop();
               },
               onLongPressUp: () {
                 if (storyImageLoadingController.value !=
                     StoryImageLoadingState.loading) {
+                  onResume();
                   animationController!.forward();
                 }
               },
@@ -463,26 +496,32 @@ class _Gestures extends StatelessWidget {
             child: GestureDetector(
               onTap: () {
                 context.read<_StoryStackController>().increment(
-                      restartAnimation: () =>
-                          animationController!.forward(from: 0),
+                      restartAnimation: () {
+                        onResume();
+                        animationController!.forward(from: 0);
+                      },
                       completeAnimation: () => animationController!.value = 1,
                     );
               },
               onTapDown: (_) {
+                onPause();
                 animationController!.stop();
               },
               onTapUp: (_) {
                 if (storyImageLoadingController.value !=
                     StoryImageLoadingState.loading) {
+                  onResume();
                   animationController!.forward();
                 }
               },
               onLongPress: () {
+                onPause();
                 animationController!.stop();
               },
               onLongPressUp: () {
                 if (storyImageLoadingController.value !=
                     StoryImageLoadingState.loading) {
+                  onResume();
                   animationController!.forward();
                 }
               },
